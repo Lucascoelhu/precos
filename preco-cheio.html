@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de CARTAZ, preço cheio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* IMPORT DAS FONTES GOOGLE */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;700;900&display=swap');
+        /* Variáveis CSS para Dimensões e Posições (Padrão A4) */
+        :root {
+            /* Tamanho Base (A4 Default) */
+            --width: 210mm;
+            --height: 297mm;
+            --main-font-size: 16px; 
+
+            /* Variáveis de ajuste que serão alteradas via JS */
+            --weight-top: 25%;
+            --weight-right: 8%;
+            --weight-rotate: -18deg;
+            
+            /* Ajustes finos para Preço/CADA (A4 Default) */
+            --real-top: 0.1em;
+            --centavos-top: -0.5em;
+            --centavos-margin-left: -85px;
+            --text-cada-font-size: 2.9em;
+
+            /* Preço (NOVAS VARIÁVEIS A4) */
+            --real-font-size: 23em;
+            --real-margin-left: -0.8em;
+            --real-transform-x: 1.3;
+            --centavos-font-size: 12em;
+            --centavos-line-height: 0.3;
+            --centavos-margin-right: -1em;
+            
+            /* Posição CADA e LOGO (A4 Default) */
+            --cada-top: 68%;
+            --cada-right: 20%;
+            --logo-top: 90%;
+            --logo-right: 297px;
+        }
+
+        body {
+            font-family: 'Arial Black', Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Controles (Estilos UNIFICADOS com o primeiro código) */
+        .controls {
+            margin-top: 20px; 
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 0.5rem; /* Unificado */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Unificado */
+            display: flex;
+            gap: 1rem; /* Unificado */
+            align-items: center;
+        }
+        .controls button, .controls a button {
+            background-color: #d90000;
+            transition: background-color 0.2s;
+        }
+        .controls button:hover, .controls a button:hover {
+            background-color: #b00000;
+        }
+        @media print {
+            .controls { display: none; }
+            .page-container { box-shadow: none; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
+
+        /* Container principal */
+        .page-container {
+            width: var(--width);
+            height: var(--height);
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4% 5%;
+            box-sizing: border-box;
+            position: relative;
+            transition: width 0.3s, height 0.3s;
+            font-size: var(--main-font-size);
+            overflow: hidden;
+            /* LINHA PONTILHADA */
+            border: 1px dashed #999; 
+        }
+        
+        /* CORREÇÃO CHAVE: Define o tamanho da página de impressão e remove as margens do navegador */
+        @page { size: var(--width) var(--height); margin: 0; }
+
+        /* Estilos dos Textos (cores e fontes) */
+        .color-red { color: #d90000; }
+        .text-black { color: black; }
+        .font-impact { font-family: Impact, 'Arial Black', sans-serif; }
+
+        [contenteditable]:focus {
+            outline: 1px dashed #000;
+            cursor: text;
+        }
+        @media print {
+            [contenteditable]:focus { outline: none; }
+        }
+
+        .editable-box {
+            display: inline-block;
+            text-align: center;
+        }
+        
+        /* Título OFERTA */
+        .offer-title { 
+            font-size: 6em; 
+            font-weight: 900; 
+            margin-top: 0.3em; 
+            margin-bottom: 0.8em; 
+            letter-spacing: 1.2px; 
+        }
+
+        /* Peso */
+        .weight-box { 
+            position: absolute; 
+            top: var(--weight-top); 
+            right: var(--weight-right); 
+            font-size: 1.4em; 
+            transform: rotate(var(--weight-rotate)); 
+            font-weight: bold;
+            min-width: 80px;
+        }
+        
+        /* Descrições e Marca */
+        .description { 
+            font-size: 2.1em; 
+            font-weight: 900; 
+            line-height: 1.1; 
+            margin-bottom: 0.2em; 
+            text-transform: uppercase;
+        }
+        .pullman { 
+            font-size: 2.1em; 
+            font-weight: 900; 
+            margin-bottom: 0.8em; 
+            text-transform: uppercase;
+        }
+
+        /* Container do preço */
+        .price-line-single {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            line-height: 1;
+            margin-top: 1em;
+            transform: scaleX(0.8);
+        }
+
+        /* Valor Inteiro */
+        .price-real-single {
+            font-size: var(--real-font-size); 
+            margin: 0;
+            padding: 11;
+            position: relative;
+            top: var(--real-top);
+            height: 1em;
+            min-width: 1.5em;
+            margin-left: var(--real-margin-left); 
+            transform: scaleX(var(--real-transform-x)); 
+            display: inline-block;
+            text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Centavos */
+        .price-centavos-single {
+            font-size: var(--centavos-font-size); 
+            font-weight: 900;
+            position: relative;
+            top: var(--centavos-top);
+            margin-left: var(--centavos-margin-left);
+            padding: 0;
+            line-height: var(--centavos-line-height); 
+            min-width: 1.5em;
+            margin-right: var(--centavos-margin-right); 
+            letter-spacing: 0.05em;
+            text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Texto CADA */
+        .text-cada {
+            position: absolute; 
+            top: var(--cada-top);
+            right: var(--cada-right);
+            font-size: var(--text-cada-font-size);
+            font-weight: 900;
+            color: black;
+        }
+        
+        /* Estilo refinado para os campos de busca */
+.search-container {
+    position: sticky;
+    top: 0;
+    background: #1a1a1a;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    z-index: 20;
+    border-bottom: 1px solid #333;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px;
+    background: #2d2d2d;
+    border: 2px solid #444;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: #3b82f6;
+    background: #333;
+    outline: none;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+/* Efeito de suavidade ao esconder botões */
+.relative {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.btn-mod {
+    border-left: 4px solid rgba(255,255,255,0.1); /* Um detalhe elegante na borda */
+}
+
+        /* Logo */
+        .logo-box {
+            position: absolute;
+            top: var(--logo-top);
+            right: var(--logo-right);
+            padding: 0.5em 1.5em;
+            background-color: #4c68d2;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        #sidebar-menu, #sidebar-menu-right {
+    position: fixed;
+    top: 20px;
+    width: 350px; /* Largura aumentada */
+    background-color: #1a1a1a;
+    color: white;
+    padding: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    z-index: 1000;
+    overflow-y: auto;
+    max-height: 90vh;
+    border-radius: 12px;
+    cursor: move;
+}
+
+#sidebar-menu { left: 20px; }
+#sidebar-menu-right { right: 20px; }
+
+
+/* Ajuste nos botões para aproveitarem a largura nova */
+.btn-mod {
+    padding: 10px 14px; /* Botões um pouco mais altos */
+    background: #2563eb;
+    color: white;
+    font-size: 12px; /* Texto levemente maior */
+    font-weight: 800;
+    border-radius: 6px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: block;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Se o nome for gigante, ele coloca "..." */
+}
+.btn-mod:hover { background: #3b82f6; transform: scale(1.05); }
+
+/* Esconde o menu na hora de imprimir */
+@media print {
+    #sidebar-menu { display: none !important; }
+}
+    </style>
+</head>
+<body>
+    <div id="sidebar-menu" class="no-print">
+    <div id="lock-overlay" class="absolute inset-0 bg-black/80 z-[10000] flex flex-col items-center justify-center p-6 text-center rounded-xl" style="display: flex;">
+        <svg class="w-12 h-12 text-yellow-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+        <p class="text-white font-bold text-sm mb-4">PAINEL DESATIVADO</p>
+        <input type="text" id="license-key-side" placeholder="Código de 30 dias" class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white text-center mb-2 text-xs">
+        <button onclick="checkLicenseSide()" class="w-full py-2 bg-yellow-600 hover:bg-yellow-500 text-black font-extrabold rounded text-xs uppercase">Ativar Acesso</button>
+        <p id="error-msg-side" class="text-red-500 text-[10px] mt-2 hidden">Código inválido!</p>
+    </div>
+
+    <div id="sidebar-content" style="opacity: 0.5; pointer-events: none;">
+        
+        <div class="search-container">
+    <p class="text-[10px] font-bold text-blue-400 mb-2 uppercase tracking-widest">Localizar Item</p>
+    <input type="text" id="search-left" placeholder="Digite o nome do produto..." 
+    class="search-input" onkeyup="filterButtons('left')">
+</div>
+        
+        <h3 class="text-center font-bold mb-4 text-xs border-b border-gray-700 pb-2 text-yellow-400">PAINEL DE EDIÇÃO (PREÇO CHEIO)</h3>
+        
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">1. Produto (Linha 1)</p>
+            <div id="list-nomes" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">2. Descrição (Linha 2)</p>
+            <div id="list-tipos" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">3. Marcas</p>
+            <div id="list-marcas" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">4. Preços Cadastrados</p>
+            <div id="list-precos" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <hr class="border-gray-700 my-4">
+
+        <div class="space-y-2 p-2 bg-gray-900 rounded-lg">
+            <p class="text-[10px] font-bold text-green-500 uppercase">Novo Botão Cloud</p>
+            <select id="add-target" class="w-full p-1 text-[10px] bg-gray-800 border border-gray-600 rounded text-white">
+                <option value="nomes">PRODUTO (L1)</option>
+                <option value="tipos">DESCRIÇÃO (L2)</option>
+                <option value="marcas">MARCA</option>
+                <option value="precos">PREÇO</option>
+            </select>
+            <input type="text" id="add-val" placeholder="Texto ou Valor" class="w-full p-1 text-[10px] bg-gray-800 border border-gray-600 rounded text-white">
+            <button onclick="addNewButton()" class="w-full py-2 bg-green-700 hover:bg-green-600 text-[10px] font-bold rounded uppercase">Salvar no Firebase</button>
+        </div>
+    </div>
+</div> 
+<div id="sidebar-menu-right" class="no-print">
+    <div class="mb-4 px-2">
+        
+    <div class="search-container">
+    <p class="text-[10px] font-bold text-blue-400 mb-2 uppercase tracking-widest">Localizar Item</p>
+    <input type="text" id="search-right" placeholder="Digite o nome do produto..." 
+    class="search-input" onkeyup="filterButtons('right')">
+</div>
+
+    <div id="lock-overlay-right" class="absolute inset-0 bg-black/80 z-[10000] flex flex-col items-center justify-center p-6 text-center rounded-xl" style="display: flex;">
+        <svg class="w-12 h-12 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-4a2 2 0 00-2-2H6a2 2 0 00-2 2v4a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+        <p class="text-white font-bold text-sm mb-4">PAINEL AUXILIAR BLOQUEADO</p>
+        <p class="text-gray-400 text-[10px]">Ative o painel principal para liberar.</p>
+    </div>
+        
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">1. Produto (Linha 1)</p>
+            <div id="list-nomes-right" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">2. Descrição (Linha 2)</p>
+            <div id="list-tipos-right" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">3. Marcas</p>
+            <div id="list-marcas-right" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <div class="mb-4">
+            <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase">4. Preços Cadastrados</p>
+            <div id="list-precos-right" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <hr class="border-gray-700 my-4">
+
+        <div class="space-y-2 p-2 bg-gray-900 rounded-lg">
+            <p class="text-[10px] font-bold text-green-500 uppercase">Novo Botão (Direito)</p>
+            <select id="add-target-right" class="w-full p-1 text-[10px] bg-gray-800 border border-gray-600 rounded text-white">
+                <option value="nomes">PRODUTO (L1)</option>
+                <option value="tipos">DESCRIÇÃO (L2)</option>
+                <option value="marcas">MARCA</option>
+                <option value="precos">PREÇO</option>
+            </select>
+            <input type="text" id="add-val-right" placeholder="Texto ou Valor" class="w-full p-1 text-[10px] bg-gray-800 border border-gray-600 rounded text-white">
+            <button onclick="addNewButtonRight()" class="w-full py-2 bg-blue-700 hover:bg-blue-600 text-[10px] font-bold rounded uppercase">Salvar no Painel Direito</button>
+        </div>
+    </div>
+</div>
+<div id="activation-screen" class="fixed inset-0 z-[9999] bg-[#0f172a] flex items-center justify-center p-4" style="display: none;">
+    <div class="max-w-md w-full bg-[#1e293b] rounded-2xl shadow-2xl border border-gray-700 p-8 text-center">
+        <h2 class="text-2xl font-bold text-white mb-4">Ativação Grupo Mega</h2>
+        <input type="text" id="license-key" placeholder="Digite o código único" class="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-xl text-white text-center mb-4">
+        <button onclick="checkLicense()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl">ATIVAR</button>
+        <p id="error-msg" class="text-red-500 text-sm mt-4 hidden">Código inválido!</p>
+    </div>
+</div>
+
+
+
+<script>
+// --- 1. FUNÇÃO DE ATIVAÇÃO DA TELA AZUL (GERAL) ---
+function checkLicense() {
+    const input = document.getElementById('license-key').value.trim().toUpperCase();
+    const partes = input.split('-'); 
+    const erroMsg = document.getElementById('error-msg');
+
+    if (partes.length === 3 && partes[0] === "MEGA") {
+        const num = parseInt(partes[1]);
+        const check = parseInt(partes[2]);
+        if (check === (num * 3)) { 
+            localStorage.setItem("megacartaz_token", "ativo_2026");
+            location.reload();
+            return;
+        }
+    }
+    erroMsg.classList.remove('hidden'); // Mostra erro se a chave for inválida
+}
+
+window.filterButtons = function(side) {
+    const input = document.getElementById('search-' + side);
+    const filter = input.value.toUpperCase();
+    const suffix = (side === 'right') ? '-right' : '';
+    const categories = ['nomes', 'tipos', 'marcas', 'precos'];
+    
+    categories.forEach(cat => {
+        const container = document.getElementById('list-' + cat + suffix);
+        if (!container) return;
+        
+        const items = container.querySelectorAll('.relative');
+        
+        items.forEach(item => {
+            const btn = item.querySelector('button');
+            if (btn) {
+                const text = btn.textContent || btn.innerText;
+                if (text.toUpperCase().includes(filter)) {
+                    item.style.display = "block";
+                    item.style.opacity = "1";
+                    item.style.transform = "scale(1)";
+                } else {
+                    item.style.display = "none";
+                    item.style.opacity = "0";
+                    item.style.transform = "scale(0.95)";
+                }
+            }
+        });
+    });
+};
+
+// --- 2. FUNÇÃO DE ATIVAÇÃO DO PAINEL LATERAL ---
+function checkLicenseSide() {
+    const input = document.getElementById('license-key-side').value.trim().toUpperCase();
+    const partes = input.split('-'); 
+    const erroMsg = document.getElementById('error-msg-side');
+
+    // IMPORTANTE: O prefixo aqui deve ser PAINEL para bater com o gerador
+    if (partes.length === 3 && (partes[0] === "PAINEL" || partes[0] === "PANEL")) {
+        const num = parseInt(partes[1]);
+        const check = parseInt(partes[2]);
+
+        if (check === (num * 3)) { 
+            const agora = new Date().getTime();
+            // Salva com o nome CORRETO que o verificador usa
+            localStorage.setItem("megacartaz_token_painel", "ativo");
+            localStorage.setItem("megacartaz_date_painel", agora.toString());
+            
+            alert("Painel liberado com sucesso!");
+            location.reload();
+            return;
+        }
+    }
+    erroMsg.classList.remove('hidden');
+}
+
+// --- 3. VERIFICAÇÃO DE SEGURANÇA AO ABRIR A PÁGINA (ÚNICA) ---
+// --- FUNÇÃO DE VERIFICAÇÃO DE LICENÇA (ATUALIZADA) ---
+function checkLicenseSide() {
+    const input = document.getElementById('license-key-side').value.trim().toUpperCase();
+    
+    // Altere o código "PAINEL-30" para o seu código de preferência
+    if (input.startsWith("PAINEL-")) {
+        localStorage.setItem("megacartaz_token_painel", "ativo");
+        localStorage.setItem("megacartaz_date_painel", new Date().getTime().toString());
+        location.reload(); // Recarrega para aplicar a liberação em ambos
+    } else {
+        const errorMsg = document.getElementById('error-msg-side');
+        if (errorMsg) errorMsg.classList.remove('hidden');
+    }
+}
+
+// --- LÓGICA DE INICIALIZAÇÃO (BLOQUEIA/LIBERA AMBOS) ---
+window.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem("megacartaz_token_painel");
+    
+    // Elementos da Esquerda
+    const overlayLeft = document.getElementById('lock-overlay');
+    const contentLeft = document.getElementById('sidebar-content');
+    
+    // Elementos da Direita
+    const overlayRight = document.getElementById('lock-overlay-right');
+    const contentRight = document.getElementById('sidebar-content-right');
+
+    if (token === "ativo") {
+        // LIBERADO: Esconde os cadeados e ativa a interação
+        if (overlayLeft) overlayLeft.style.display = 'none';
+        if (overlayRight) overlayRight.style.display = 'none';
+        
+        [contentLeft, contentRight].forEach(el => {
+            if (el) {
+                el.style.opacity = '1';
+                el.style.pointerEvents = 'auto';
+            }
+        });
+    } else {
+        // BLOQUEADO: Mostra cadeados e desativa cliques/transparência
+        if (overlayLeft) overlayLeft.style.display = 'flex';
+        if (overlayRight) overlayRight.style.display = 'flex';
+        
+        [contentLeft, contentRight].forEach(el => {
+            if (el) {
+                el.style.opacity = '0.3'; // Mais escuro para indicar bloqueio
+                el.style.pointerEvents = 'none';
+            }
+        });
+    }
+});
+</script>
+
+<style>
+    /* Esta regra mágica esconde qualquer coisa com a classe 'no-print' na hora da impressão */
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+
+    /* Estilo para manter o botão selecionado visualmente */
+    .size-btn:focus {
+        background-color: #2563eb !important;
+        color: white !important;
+        box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+    }
+</style>
+
+<div class="no-print max-w-5xl bg-[#111827] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden font-sans mx-auto my-4">
+    <div class="px-6 py-4 bg-[#1f2937]/50 border-b border-gray-800 flex justify-between items-center">
+        <h3 class="text-gray-300 font-bold text-sm tracking-tight flex items-center gap-2">
+            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            PAINEL DE CONTROLE
+        </h3>
+        <a href="https://coelhosite.github.io/etiqueta-pequena/" target="_blank"
+           class="flex items-center gap-2 px-5 py-2.5 bg-[#1f2937] border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all active:scale-95 uppercase tracking-wider">
+            <svg class="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            Etiquetas Pequenas
+        </a>
+    </div>
+
+    <div class="p-6 bg-gradient-to-b from-[#111827] to-[#0f172a]">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            
+            <div class="space-y-3">
+                <p class="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">Tamanho</p>
+                <div class="inline-flex w-full p-1 bg-[#1f2937] rounded-xl border border-gray-700/50">
+                    <button onclick="resizeOffer('A4')" class="size-btn flex-1 px-2 py-2.5 text-sm font-bold text-gray-400 rounded-lg transition-all hover:text-white hover:bg-gray-700/50 active:scale-95">A4</button>
+                    <button onclick="resizeOffer('A5')" class="size-btn flex-1 px-2 py-2.5 text-sm font-bold text-gray-400 rounded-lg transition-all hover:text-white hover:bg-gray-700/50 active:scale-95">A5</button>
+                    <button onclick="resizeOffer('A6')" class="size-btn flex-1 px-2 py-2.5 text-sm font-bold text-gray-400 rounded-lg transition-all hover:text-white hover:bg-gray-700/50 active:scale-95">A6</button>
+                    <button onclick="resizeOffer('A7')" class="size-btn flex-1 px-2 py-2.5 text-sm font-bold text-gray-400 rounded-lg transition-all hover:text-white hover:bg-gray-700/50 active:scale-95">A7</button>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">Ação</p>
+                <button onclick="window.print()" 
+                   class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-900/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                    IMPRIMIR AGORA
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-xs font-semibold text-gray-500 uppercase ml-1 tracking-wider">1 por x,xx ou 3 por x,xx</p>
+                <a href="preco-oferta.html" 
+                   class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-[#1f2937] border border-gray-700 hover:border-gray-500 text-gray-300 hover:text-white text-sm font-bold rounded-xl transition-all active:scale-95">
+                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+                    PREÇOS DE OFERTA
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="page-container" id="offer-page-single">
+
+    <div class="offer-title color-red font-impact" contenteditable="true">OFERTA</div>
+
+    <div class="weight-box text-black editable-box" contenteditable="true">450G</div>
+
+    <div class="description text-black" contenteditable="true">NOME DO PRODUTO</div>
+    <div class="description text-black" contenteditable="true">DESCRIÇÃO</div>
+    <div class="pullman color-red" contenteditable="true">MARCA</div>
+
+    <div class="price-line-single">
+        <div class="price-group-single color-red font-impact">
+            <span class="price-real-single editable-box" contenteditable="true">5</span>
+            <span class="price-centavos-single editable-box" contenteditable="true">,99</span>
+        </div>
+    </div>
+
+    <div class="text-cada text-black" contenteditable="true">CADA</div>
+
+    <div class="logo-box" contenteditable="true">GRUPO MEGA</div>
+</div>
+
+<script>
+    const root = document.documentElement;
+    const rootStyles = root.style;
+
+    const sizes = {
+        'A4': { 
+            width: '210mm', height: '297mm', base_font: '16px',
+            '--weight-top': '18%', '--weight-right': '8%', '--weight-rotate': '-18deg',
+            
+            // Posição CADA e LOGO
+            '--cada-top': '70%', '--cada-right': '18%',
+            '--logo-top': '90%', '--logo-right': '297px',
+            
+            // Posição Preço
+            '--real-top': '0.1em',
+            '--centavos-top': '-0.24em', 
+            '--centavos-margin-left': '-85px', 
+            '--text-cada-font-size': '2.9em',
+            
+            // Propriedades de Estilo (Tamanho/Transformação)
+            '--real-font-size': '23em',
+            '--real-margin-left': '-0.8em',
+            '--real-transform-x': '1.0', 
+            '--centavos-font-size': '15em',
+            '--centavos-line-height': '0.3',
+            '--centavos-margin-right': '-1em'
+        },
+        'A5': { 
+            width: '158mm', height: '210mm', base_font: '12px',
+            '--weight-top': '18%', '--weight-right': '3%', '--weight-rotate': '-15deg',
+            
+            // Posição CADA e LOGO
+            '--cada-top': '75%', '--cada-right': '20%',
+            '--logo-top': '90%', '--logo-right': '200px',
+            
+            // Posição Preço
+            '--real-top': '0.1em',
+            '--centavos-top': '-0.35em', 
+            '--centavos-margin-left': '-100px',
+            '--text-cada-font-size': '2.8em',
+            
+            // Propriedades de Estilo (Tamanho/Transformação)
+            '--real-font-size': '25em', 
+            '--real-margin-left': '-0.6em',
+            '--real-transform-x': '0.8',
+            '--centavos-font-size': '15em', 
+            '--centavos-line-height': '0.3',
+            '--centavos-margin-right': '-0.5em'
+        },
+        'A6': { 
+            width: '105mm', height: '148mm', base_font: '9px',
+            // Peso
+            '--weight-top': '18%', '--weight-right': '2%', '--weight-rotate': '-12deg',
+            
+            // Posição CADA e LOGO
+            '--cada-top': '73%', '--cada-right': '19%', 
+            '--logo-top': '90%', '--logo-right': '143px', 
+            
+            // Posição Preço
+            '--real-top': '-0.1em',
+            '--centavos-top': '-1.4em', 
+            '--centavos-margin-left': '-40px', 
+            '--text-cada-font-size': '2.3em', 
+            
+            // Propriedades de Estilo (Tamanho/Transformação)
+            '--real-font-size': '25em',      
+            '--real-margin-left': '-0.85em',  
+            '--real-transform-x': '1.0',    
+            '--centavos-font-size': '15em',   
+            '--centavos-line-height': '0.3',
+            '--centavos-margin-right': '-2em'  
+        },
+        'A7': { 
+            width: '74mm', height: '105mm', base_font: '7px',
+            // Peso
+            '--weight-top': '23%', '--weight-right': '1%', '--weight-rotate': '-10deg',
+            
+            // Posição CADA e LOGO
+            '--cada-top': '79%', '--cada-right': '23%', 
+            '--logo-top': '90%', '--logo-right': '90px', 
+            
+            // Posição Preço
+            '--real-top': '0.02em',
+            '--centavos-top': '-0.6em', 
+            '--centavos-margin-left': '-35px', 
+            '--text-cada-font-size': '1.8em', 
+            
+            // Propriedades de Estilo (Tamanho/Transformação)
+            '--real-font-size': '20em',      
+            '--real-margin-left': '-0.6em',  
+            '--real-transform-x': '1.0',     
+            '--centavos-font-size': '11em',   
+            '--centavos-line-height': '0.3',
+            '--centavos-margin-right': '-0.4em'  
+        }
+    };
+    
+    function resizeOffer(sizeKey) {
+        const size = sizes[sizeKey];
+        if (size) {
+            // 1. Aplica as dimensões do container
+            rootStyles.setProperty('--width', size.width);
+            rootStyles.setProperty('--height', size.height);
+            rootStyles.setProperty('--main-font-size', size.base_font);
+            
+            // 2. Aplica as variáveis de Posicionamento (Peso, CADA e Logo)
+            rootStyles.setProperty('--weight-top', size['--weight-top']);
+            rootStyles.setProperty('--weight-right', size['--weight-right']);
+            rootStyles.setProperty('--weight-rotate', size['--weight-rotate']);
+            
+            rootStyles.setProperty('--cada-top', size['--cada-top']);
+            rootStyles.setProperty('--cada-right', size['--cada-right']);
+            rootStyles.setProperty('--logo-top', size['--logo-top']);
+            rootStyles.setProperty('--logo-right', size['--logo-right']);
+
+            // 3. Aplica as variáveis de Estilo e Posicionamento do Preço/Centavos
+            rootStyles.setProperty('--text-cada-font-size', size['--text-cada-font-size']);
+
+            rootStyles.setProperty('--real-top', size['--real-top']);
+            rootStyles.setProperty('--centavos-top', size['--centavos-top']);
+            rootStyles.setProperty('--centavos-margin-left', size['--centavos-margin-left']);
+            
+            rootStyles.setProperty('--real-font-size', size['--real-font-size']);
+            rootStyles.setProperty('--real-margin-left', size['--real-margin-left']);
+            rootStyles.setProperty('--real-transform-x', size['--real-transform-x']);
+            
+            rootStyles.setProperty('--centavos-font-size', size['--centavos-font-size']);
+            rootStyles.setProperty('--centavos-line-height', size['--centavos-line-height']);
+            rootStyles.setProperty('--centavos-margin-right', size['--centavos-margin-right']);
+        }
+    }
+
+    // Função para garantir que as descrições em B fiquem em maiúsculas (se necessário)
+    function toUpperCaseB(event) {
+        const element = event.target;
+        if (element.textContent) {
+            element.textContent = element.textContent.toUpperCase();
+        }
+    }
+    document.querySelectorAll('.description, .pullman').forEach(element => {
+        element.addEventListener('blur', toUpperCaseB);
+        toUpperCaseB({ target: element }); // Executa a conversão inicial
+    });
+    
+    // Inicializa o template para A4 ao carregar a página
+       window.onload = () => {
+        resizeOffer('A5');
+    // Isso aplica o estilo visual de "selecionado" ao botão A5
+        document.querySelectorAll('.size-btn')[1].focus(); 
+    };
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  // Suas credenciais fornecidas
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUusxMXvy1nYGQyRBDlLLPnlJ_XRNs_MA",
+    authDomain: "etiquetas-mega.firebaseapp.com",
+    databaseURL: "https://etiquetas-mega-default-rtdb.firebaseio.com",
+    projectId: "etiquetas-mega",
+    storageBucket: "etiquetas-mega.firebasestorage.app",
+    messagingSenderId: "127604295233",
+    appId: "1:127604295233:web:ce118f72355016f56968c0"
+  };
+
+  // Inicialização
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // --- 1. FUNÇÃO PARA DEFINIR OS TEXTOS NO CARTAZ ---
+  // Esta função identifica os campos do seu HTML original
+  window.setText = function(selector, text, index = 0) {
+    const elements = document.querySelectorAll(selector);
+    if (elements[index]) {
+      // Atualiza o texto e garante que fique em maiúsculas
+      elements[index].textContent = text.toUpperCase();
+    }
+  };
+
+  // --- 2. FUNÇÃO PARA DEFINIR O PREÇO ---
+  window.setPrice = function(p) {
+    const pReal = document.querySelector('.price-real-single');
+    const pCent = document.querySelector('.price-centavos-single');
+    
+    if (p.includes(',')) {
+      const partes = p.split(',');
+      pReal.textContent = partes[0];
+      pCent.textContent = ',' + partes[1];
+    } else {
+      pReal.textContent = p;
+      pCent.textContent = ',00';
+    }
+  };
+
+  // --- FUNÇÕES DE SALVAMENTO INDEPENDENTE ---
+window.addNewButton = function() {
+    const target = document.getElementById('add-target').value;
+    const val = document.getElementById('add-val').value.toUpperCase();
+    if (val) {
+        push(ref(db, 'botoes/' + target), { texto: val })
+            .then(() => { document.getElementById('add-val').value = ""; });
+    }
+};
+
+window.addNewButtonRight = function() {
+    const target = document.getElementById('add-target-right').value;
+    const val = document.getElementById('add-val-right').value.toUpperCase();
+    if (val) {
+        push(ref(db, 'botoes_aux/' + target), { texto: val })
+            .then(() => { document.getElementById('add-val-right').value = ""; });
+    }
+};
+
+// --- FUNÇÃO DE RENDERIZAÇÃO BLINDADA (EVITA ESPELHAMENTO) ---
+function renderSide(data, side) {
+    const categories = ['nomes', 'tipos', 'marcas', 'precos'];
+    const suffix = (side === 'right') ? '-right' : '';
+    const dbPath = (side === 'right') ? 'botoes_aux' : 'botoes';
+
+    categories.forEach(cat => {
+        const container = document.getElementById('list-' + cat + suffix);
+        if (!container) return;
+        
+        container.innerHTML = ""; // Limpa apenas o container do lado correto
+
+        if (data && data[cat]) {
+            const ordenados = Object.entries(data[cat]).sort((a, b) => a[1].texto.localeCompare(b[1].texto));
+
+            ordenados.forEach(([id, item]) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = "relative group";
+                const btn = document.createElement('button');
+                btn.className = "btn-mod w-full text-left truncate";
+                
+                // Cores por categoria do preço cheio
+                if(cat === 'tipos') btn.style.background = "#581c87";
+                if(cat === 'marcas') btn.style.background = "#991b1b";
+                if(cat === 'precos') btn.style.background = "#854d0e";
+
+                btn.textContent = item.texto;
+                btn.onclick = () => {
+                    if (cat === 'nomes') setText('.description', item.texto, 0);
+                    if (cat === 'tipos') setText('.description', item.texto, 1);
+                    if (cat === 'marcas') setText('.pullman', item.texto);
+                    if (cat === 'precos') setPrice(item.texto);
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = "×";
+                delBtn.className = "absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 z-10 shadow-lg";
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if(confirm("Deseja excluir este item?")) remove(ref(db, `${dbPath}/${cat}/${id}`));
+                };
+
+                wrapper.appendChild(btn);
+                wrapper.appendChild(delBtn);
+                container.appendChild(wrapper);
+            });
+        }
+    });
+}
+
+// --- ESCUTADORES SEPARADOS (IMPEDE O ERRO DE ATUALIZAR AMBOS) ---
+onValue(ref(db, 'botoes/'), (snapshot) => {
+    renderSide(snapshot.val(), 'left');
+});
+
+onValue(ref(db, 'botoes_aux/'), (snapshot) => {
+    renderSide(snapshot.val(), 'right');
+});
+
+
+</script>    
+
+    <script>
+// 🔹 FUNÇÃO CORRIGIDA: Variáveis agora são locais e independentes
+function makeDraggable(el, storageKey) {
+    if (!el) return;
+
+    // Estas variáveis agora pertencem apenas a ESTE painel
+    let isDragging = false;
+    let startX, startY;
+    let currentX = 0;
+    let currentY = 0;
+
+    // Recupera a posição salva individualmente
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+        const pos = JSON.parse(saved);
+        currentX = pos.x;
+        currentY = pos.y;
+        el.style.transform = `translate(${currentX}px, ${currentY}px)`;
+    }
+
+    el.addEventListener("mousedown", startDrag);
+
+    function startDrag(e) {
+        // Não arrasta se clicar em botões ou inputs
+        if (["BUTTON", "INPUT", "SELECT", "OPTION"].includes(e.target.tagName)) return;
+
+        isDragging = true;
+        startX = e.clientX - currentX;
+        startY = e.clientY - currentY;
+
+        // Adiciona os eventos no document para não "perder" o mouse se mover rápido
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("mouseup", stopDrag);
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+
+        currentX = e.clientX - startX;
+        currentY = e.clientY - startY;
+
+        el.style.transform = `translate(${currentX}px, ${currentY}px)`;
+    }
+    
+    // Função que monitora o status da chave em tempo real
+function monitorarStatusLicenca(chave) {
+    db.ref('licencas/' + chave).on('value', (snapshot) => {
+        const dados = snapshot.val();
+        
+        // Se a chave não existir ou o status for 'bloqueado'
+        if (!dados || dados.status === 'bloqueado') {
+            bloquearAcessoRemoto();
+        } else {
+            liberarAcessoRemoto();
+        }
+    });
+}
+
+function bloquearAcessoRemoto() {
+    document.getElementById('activation-screen').style.display = 'flex'; // Mostra tela de ativação
+    document.getElementById('lock-overlay').style.display = 'flex';      // Bloqueia a barra lateral
+    document.getElementById('sidebar-content').style.opacity = '0.5';
+    document.getElementById('sidebar-content').style.pointerEvents = 'none';
+    localStorage.removeItem('licenca_ativa'); // Remove do navegador para obrigar novo login
+}
+
+function liberarAcessoRemoto() {
+    document.getElementById('activation-screen').style.display = 'none';
+    document.getElementById('lock-overlay').style.display = 'none';
+    document.getElementById('sidebar-content').style.opacity = '1';
+    document.getElementById('sidebar-content').style.pointerEvents = 'auto';
+}
+
+    function stopDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+
+        // Salva a posição individual no localStorage
+        localStorage.setItem(storageKey, JSON.stringify({
+            x: currentX,
+            y: currentY
+        }));
+
+        document.removeEventListener("mousemove", drag);
+        document.removeEventListener("mouseup", stopDrag);
+    }
+}
+
+// 🔹 ATIVAÇÃO (Não mude isso)
+makeDraggable(document.getElementById("sidebar-menu"), "pos_paine_esquerdo");
+makeDraggable(document.getElementById("sidebar-menu-right"), "pos_painel_direito");
+</script>
+
+    
+</body>
+</html>
