@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Cartaz Grupo Mega</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .gradient-text {
+            background-image: linear-gradient(45deg, #3f7bbf, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(63,123,191,0.3);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes pulse-border {
+            0%, 100% { border-color: #3f7bbf; }
+            50% { border-color: #e74c3c; }
+        }
+        .pulse-border { animation: pulse-border 2s infinite; }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Loading overlay -->
+    <div id="loading-screen" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-400 text-sm">Verificando sessão...</p>
+        </div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="fade-in max-w-md w-full">
+        <div class="bg-white rounded-[2rem] shadow-2xl p-8 md:p-12 border-t-[10px] border-blue-500 text-center">
+            
+            <!-- Logo -->
+            <img src="LogoCoelho.png" alt="Logo Coelho" class="w-16 h-16 object-contain mx-auto mb-4 rounded-full">
+            
+            <!-- Título -->
+            <h1 class="text-4xl font-black uppercase tracking-wide gradient-text mb-1">🏷️ Cartaz</h1>
+            <p class="text-gray-500 font-semibold mb-1">Grupo Mega</p>
+            <p class="text-gray-400 text-sm mb-8">Faça login para continuar</p>
+
+            <!-- Formulário -->
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">E-mail</label>
+                    <input type="email" id="login-email" placeholder="seu@email.com"
+                        class="input-glow w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-800 text-sm focus:outline-none focus:border-blue-500 transition-all"
+                        onkeydown="if(event.key==='Enter') document.getElementById('login-token').focus()">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Token de Acesso</label>
+                    <input type="text" id="login-token" placeholder="XXXX-XXXX-XXXX-XXXX"
+                        class="input-glow w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-800 text-sm focus:outline-none focus:border-blue-500 transition-all uppercase tracking-widest"
+                        onkeydown="if(event.key==='Enter') doLogin()"
+                        oninput="this.value=this.value.toUpperCase()">
+                </div>
+
+                <!-- Erro -->
+                <div id="login-error" class="hidden bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                    <p id="login-error-msg" class="text-red-600 text-sm font-medium text-center"></p>
+                </div>
+
+                <!-- Botão Login -->
+                <button onclick="doLogin()" id="btn-login"
+                    class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 
+                           text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-blue-900/20 
+                           active:scale-95 text-sm uppercase tracking-wider mt-2">
+                    <span id="btn-login-text">Entrar no Sistema</span>
+                    <span id="btn-login-spinner" class="hidden">
+                        <svg class="animate-spin inline w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 22 6.477 22 12h-4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Verificando...
+                    </span>
+                </button>
+            </div>
+
+            <!-- Admin link -->
+            <div class="mt-8 pt-6 border-t border-gray-100">
+                <a href="admin.html" class="text-xs text-gray-400 hover:text-blue-500 transition-colors font-medium">
+                    🔐 Painel Administrativo
+                </a>
+            </div>
+
+            <p class="text-xs text-gray-400 mt-4">Desenvolvido por Lucas Coelho, 2025</p>
+        </div>
+    </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA8XOjs8PKFx7DvI-Xthxwra2AOLMjIhVU",
+    authDomain: "etiquetas-55290.firebaseapp.com",
+    databaseURL: "https://etiquetas-55290-default-rtdb.firebaseio.com",
+    projectId: "etiquetas-55290",
+    storageBucket: "etiquetas-55290.firebasestorage.app",
+    messagingSenderId: "776336919037",
+    appId: "1:776336919037:web:1374f4018fc44c388e3194"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Verificar sessão ativa ao carregar
+window.addEventListener('DOMContentLoaded', async () => {
+    const session = getSession();
+    if (session) {
+        // Verificar se a sessão ainda é válida no Firebase
+        try {
+            const emailKey = emailToKey(session.email);
+            const snap = await get(ref(db, `usuarios/${emailKey}`));
+            if (snap.exists()) {
+                const user = snap.val();
+                if (user.status === 'ativo' && user.token === session.token) {
+                    const agora = Date.now();
+                    if (user.expiracao > agora) {
+                        // Sessão válida, redirecionar
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
+            }
+        } catch(e) {}
+        // Sessão inválida
+        clearSession();
+    }
+    document.getElementById('loading-screen').style.display = 'none';
+});
+
+function emailToKey(email) {
+    return email.toLowerCase().replace(/\./g, '_dot_').replace(/@/g, '_at_');
+}
+
+function setSession(email, token) {
+    sessionStorage.setItem('mega_session', JSON.stringify({ email, token, ts: Date.now() }));
+}
+
+function getSession() {
+    try {
+        return JSON.parse(sessionStorage.getItem('mega_session'));
+    } catch(e) { return null; }
+}
+
+function clearSession() {
+    sessionStorage.removeItem('mega_session');
+}
+
+function showError(msg) {
+    const el = document.getElementById('login-error');
+    const msgEl = document.getElementById('login-error-msg');
+    el.classList.remove('hidden');
+    msgEl.textContent = msg;
+}
+
+function hideError() {
+    document.getElementById('login-error').classList.add('hidden');
+}
+
+function setLoading(loading) {
+    const btn = document.getElementById('btn-login');
+    const text = document.getElementById('btn-login-text');
+    const spinner = document.getElementById('btn-login-spinner');
+    btn.disabled = loading;
+    text.classList.toggle('hidden', loading);
+    spinner.classList.toggle('hidden', !loading);
+}
+
+window.doLogin = async function() {
+    hideError();
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const token = document.getElementById('login-token').value.trim().toUpperCase();
+
+    if (!email || !token) {
+        showError('Preencha o e-mail e o token de acesso.');
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        const emailKey = emailToKey(email);
+        const snap = await get(ref(db, `usuarios/${emailKey}`));
+
+        if (!snap.exists()) {
+            showError('E-mail não encontrado. Contate o administrador.');
+            setLoading(false);
+            return;
+        }
+
+        const user = snap.val();
+
+        if (user.status !== 'ativo') {
+            showError('Acesso bloqueado. Contate o administrador.');
+            setLoading(false);
+            return;
+        }
+
+        if (user.token !== token) {
+            showError('Token inválido. Verifique e tente novamente.');
+            setLoading(false);
+            return;
+        }
+
+        const agora = Date.now();
+        if (user.expiracao <= agora) {
+            const dataExp = new Date(user.expiracao).toLocaleDateString('pt-BR');
+            showError(`Token expirado em ${dataExp}. Contate o administrador para renovar.`);
+            setLoading(false);
+            return;
+        }
+
+        // Login bem sucedido — registrar último acesso
+        await set(ref(db, `usuarios/${emailKey}/ultimo_acesso`), agora);
+
+        setSession(email, token);
+        window.location.href = 'index.html';
+
+    } catch(e) {
+        console.error(e);
+        showError('Erro de conexão. Verifique sua internet.');
+        setLoading(false);
+    }
+};
+</script>
+</body>
+</html>
