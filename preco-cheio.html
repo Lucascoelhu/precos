@@ -303,18 +303,18 @@
     </style>
 </head>
 <body>
-    <!-- Auth Loading -->
-    <div id="auth-loading" class="fixed inset-0 bg-gray-900 z-[99999] flex items-center justify-center">
-        <div class="text-center">
-            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-gray-300 text-sm font-sans">Verificando acesso...</p>
-        </div>
-    </div>
-    <script type="module" src="auth-guard.js"></script>
+    <script>
+        // Guard simples: verifica sessão antes de tudo
+        (function(){
+            try {
+                var s = JSON.parse(sessionStorage.getItem("mega_session"));
+                if (!s || !s.email || !s.token) { window.location.replace("login.html"); }
+            } catch(e) { window.location.replace("login.html"); }
+        })();
+    </script>
 
     <!-- Botão Logout fixo -->
-    <div id="main-content" style="display:none" class="fixed top-2 right-2 z-[9998] no-print flex items-center gap-2">
-        <span id="user-nome" class="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded-lg hidden md:block"></span>
+    <div class="fixed top-2 right-2 z-[9998] no-print flex items-center gap-2">
         <button onclick="sessionStorage.removeItem('mega_session');window.location.href='login.html'"
             class="px-3 py-1.5 bg-red-900/70 hover:bg-red-700 text-red-300 hover:text-white text-xs font-bold rounded-lg transition-all border border-red-800">
             Sair
