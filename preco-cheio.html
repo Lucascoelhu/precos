@@ -313,16 +313,7 @@
         })();
     </script>
 
-    <!-- Botão Logout fixo -->
-    <div class="fixed top-2 right-2 z-[9998] no-print flex items-center gap-2">
-        <button onclick="sessionStorage.removeItem('mega_session');window.location.href='login.html'"
-            class="px-3 py-1.5 bg-red-900/70 hover:bg-red-700 text-red-300 hover:text-white text-xs font-bold rounded-lg transition-all border border-red-800">
-            Sair
-        </button>
-        <a href="index.html" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-lg transition-all border border-gray-700">
-            ← Menu
-        </a>
-    </div>
+
 
     <div id="sidebar-menu" class="no-print">
     <div id="lock-overlay" class="absolute inset-0 bg-black/80 z-[10000] flex flex-col items-center justify-center p-6 text-center rounded-xl" style="display: flex;">
@@ -504,19 +495,38 @@ window.filterButtons = function(side) {
 </style>
 
 <div class="no-print max-w-5xl bg-[#111827] border border-gray-800 rounded-2xl shadow-2xl overflow-hidden font-sans mx-auto my-4">
-    <div class="px-6 py-4 bg-[#1f2937]/50 border-b border-gray-800 flex justify-between items-center">
-        <h3 class="text-gray-300 font-bold text-sm tracking-tight flex items-center gap-2">
-            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-            PAINEL DE CONTROLE
-        </h3>
-        <a href="https://coelhosite.github.io/etiqueta-pequena/" target="_blank"
-           class="flex items-center gap-2 px-5 py-2.5 bg-[#1f2937] border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all active:scale-95 uppercase tracking-wider">
-            <svg class="w-5 h-5 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/>
-            </svg>
-            Etiquetas Pequenas
-        </a>
+    <div class="px-6 py-3 bg-[#1f2937]/50 border-b border-gray-800 flex flex-wrap gap-3 justify-between items-center">
+        <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            <div>
+                <p class="text-gray-300 font-bold text-xs uppercase tracking-wider">Painel de Controle</p>
+                <p class="text-gray-500 text-[11px]">Bem-vindo, <span id="user-email-display" class="text-blue-400 font-semibold"></span></p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="https://coelhosite.github.io/etiqueta-pequena/" target="_blank"
+               class="flex items-center gap-1.5 px-3 py-2 bg-[#1f2937] border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white text-xs font-bold rounded-xl transition-all active:scale-95 uppercase">
+                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+                Etiquetas
+            </a>
+            <a href="index.html"
+               class="flex items-center gap-1.5 px-3 py-2 bg-[#1f2937] border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white text-xs font-bold rounded-xl transition-all active:scale-95 uppercase">
+                🏠 Menu
+            </a>
+            <button onclick="sessionStorage.removeItem('mega_session');window.location.href='login.html'"
+               class="flex items-center gap-1.5 px-3 py-2 bg-red-900/40 border border-red-800 hover:bg-red-800 text-red-400 hover:text-white text-xs font-bold rounded-xl transition-all active:scale-95 uppercase">
+                Sair
+            </button>
+        </div>
     </div>
+    <script>
+        try {
+            var s = JSON.parse(sessionStorage.getItem("mega_session"));
+            if (s && s.email) document.getElementById("user-email-display").textContent = s.email;
+        } catch(e) {}
+    </script>
 
     <div class="p-6 bg-gradient-to-b from-[#111827] to-[#0f172a]">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
