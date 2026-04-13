@@ -11,13 +11,11 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
                     colors: {
-                        'primary-blue': '#3f7bbf', // Cor Principal
-                        'btn-cheio': '#00b894', // Verde/Teal
-                        'btn-oferta': '#e74c3c', // Vermelho
+                        'primary-blue': '#3f7bbf',
+                        'btn-cheio': '#00b894',
+                        'btn-oferta': '#e74c3c',
                     }
                 }
             }
@@ -25,87 +23,100 @@
     </script>
     
     <style>
-        .shine-effect {
-            position: relative;
-            overflow: hidden; 
-        }
+        .shine-effect { position: relative; overflow: hidden; }
         .shine-effect::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.1) 100%);
             transition: transform 0.8s ease-in-out;
-            transform: translateX(-100%) skewX(-20deg); 
+            transform: translateX(-100%) skewX(-20deg);
             z-index: 10;
         }
-        .shine-effect:hover::after {
-            transform: translateX(100%) skewX(-20deg); 
-        }
+        .shine-effect:hover::after { transform: translateX(100%) skewX(-20deg); }
         .gradient-text-blue-red {
-            background-image: linear-gradient(45deg, #3f7bbf, #e74c3c); 
+            background-image: linear-gradient(45deg, #3f7bbf, #e74c3c);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-fill-color: transparent;
         }
-        .text-shadow-lg {
-             /* Adicionado para o título, que estava faltando no seu código anterior */
-            text-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-        }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
     </style>
 </head>
 <body class="bg-gray-900 font-sans flex items-center justify-center min-h-screen p-6">
 
-    <div class="menu-container bg-white p-10 md:p-16 rounded-[2rem] shadow-2xl text-center max-w-md w-full border-t-[12px] border-primary-blue transition duration-500 hover:shadow-primary-blue/50">
-        
-        <div class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight uppercase tracking-wide
-            relative inline-block transition-all duration-300 ease-in-out transform hover:scale-105
-            gradient-text-blue-red text-shadow-lg">
-            🏷️cartaz
+    <!-- Auth Loading -->
+    <div id="auth-loading" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-400 text-sm">Verificando acesso...</p>
         </div>
-        
-        <div class="text-gray-800 text-lg mb-3 font-medium">
-            - Grupo Mega -
-        </div>
-        
-        <div class="text-gray-500 text-lg mb-10 font-medium">
-            Selecione o Tipo de Preço
-        </div>
-        
-        <div class="flex flex-col space-y-8">
-            
-            <a href="preco-cheio.html" 
-                class="shine-effect relative overflow-hidden flex items-center justify-between min-h-[90px] px-8 py-5 
-                        rounded-3xl cursor-pointer text-white text-2xl font-extrabold shadow-xl transition-all duration-300 ease-in-out
-                        bg-gradient-to-tr from-btn-cheio to-green-600 hover:from-green-500 hover:to-green-700 
-                        hover:translate-y-[-8px] hover:shadow-2xl hover:shadow-btn-cheio/60 group">
-                
-                <span class="text-5xl opacity-90 z-20 group-hover:text-yellow-300 transition-colors">💰</span>
-                
-                <span class="flex-grow text-center z-20">PREÇO ÚNICO</span>
-            </a>
-            
-            <a href="preco-oferta.html" 
-                class="shine-effect relative overflow-hidden flex items-center justify-between min-h-[90px] px-8 py-5 
-                        rounded-3xl cursor-pointer text-white text-2xl font-extrabold shadow-xl transition-all duration-300 ease-in-out
-                        bg-gradient-to-tr from-btn-oferta to-red-600 hover:from-red-500 hover:to-red-700 
-                        hover:translate-y-[-8px] hover:shadow-2xl hover:shadow-btn-oferta/60 group">
-                
-                <span class="text-5xl opacity-90 z-20 group-hover:text-orange-300 transition-colors">🔥</span>
-                
-                <span class="flex-grow text-center z-20">PREÇO DE OFERTA</span>
-            </a>
-        </div>
-        
-        <div class="text-sm text-gray-700 mt-16 font-normal"> 
-            Desenvolvido por: Lucas Coelho, 2025 <br>
-        </div>
-        <br>
-        <img src="LogoCoelho.png" alt="Logo" style="width:50px;height:50px;object-fit:contain;opacity:1;display:block;margin:0 auto 10px auto;">
     </div>
 
+    <!-- Main Content -->
+    <div id="main-content" style="display:none" class="w-full max-w-md">
+
+        <!-- User info bar -->
+        <div class="flex items-center justify-between mb-4 px-2">
+            <div class="text-gray-400 text-xs">
+                👤 <span id="user-nome" class="text-gray-300 font-medium"></span>
+            </div>
+            <button onclick="doLogout()"
+                class="text-xs text-gray-500 hover:text-red-400 transition-colors font-medium px-3 py-1 rounded-lg hover:bg-red-900/20">
+                Sair →
+            </button>
+        </div>
+
+        <div class="fade-in menu-container bg-white p-10 md:p-16 rounded-[2rem] shadow-2xl text-center border-t-[12px] border-primary-blue transition duration-500 hover:shadow-primary-blue/50">
+            
+            <div class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight uppercase tracking-wide
+                relative inline-block transition-all duration-300 ease-in-out transform hover:scale-105
+                gradient-text-blue-red">
+                🏷️cartaz
+            </div>
+            
+            <div class="text-gray-800 text-lg mb-3 font-medium">- Grupo Mega -</div>
+            <div class="text-gray-500 text-lg mb-10 font-medium">Selecione o Tipo de Preço</div>
+            
+            <div class="flex flex-col space-y-8">
+                
+                <a href="preco-cheio.html" 
+                    class="shine-effect relative overflow-hidden flex items-center justify-between min-h-[90px] px-8 py-5 
+                            rounded-3xl cursor-pointer text-white text-2xl font-extrabold shadow-xl transition-all duration-300 ease-in-out
+                            bg-gradient-to-tr from-btn-cheio to-green-600 hover:from-green-500 hover:to-green-700 
+                            hover:translate-y-[-8px] hover:shadow-2xl hover:shadow-btn-cheio/60 group">
+                    <span class="text-5xl opacity-90 z-20 group-hover:text-yellow-300 transition-colors">💰</span>
+                    <span class="flex-grow text-center z-20">PREÇO ÚNICO</span>
+                </a>
+                
+                <a href="preco-oferta.html" 
+                    class="shine-effect relative overflow-hidden flex items-center justify-between min-h-[90px] px-8 py-5 
+                            rounded-3xl cursor-pointer text-white text-2xl font-extrabold shadow-xl transition-all duration-300 ease-in-out
+                            bg-gradient-to-tr from-btn-oferta to-red-600 hover:from-red-500 hover:to-red-700 
+                            hover:translate-y-[-8px] hover:shadow-2xl hover:shadow-btn-oferta/60 group">
+                    <span class="text-5xl opacity-90 z-20 group-hover:text-orange-300 transition-colors">🔥</span>
+                    <span class="flex-grow text-center z-20">PREÇO DE OFERTA</span>
+                </a>
+            </div>
+            
+            <div class="text-sm text-gray-700 mt-16 font-normal"> 
+                Desenvolvido por: Lucas Coelho, 2025 <br>
+            </div>
+            <br>
+            <img src="LogoCoelho.png" alt="Logo" style="width:50px;height:50px;object-fit:contain;opacity:1;display:block;margin:0 auto 10px auto;">
+        </div>
+    </div>
+
+<script>
+function doLogout() {
+    if (confirm('Deseja sair do sistema?')) {
+        sessionStorage.removeItem('mega_session');
+        window.location.href = 'login.html';
+    }
+}
+</script>
+<script type="module" src="auth-guard.js"></script>
 </body>
 </html>
