@@ -303,6 +303,27 @@
     </style>
 </head>
 <body>
+    <!-- Auth Loading -->
+    <div id="auth-loading" class="fixed inset-0 bg-gray-900 z-[99999] flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-300 text-sm font-sans">Verificando acesso...</p>
+        </div>
+    </div>
+    <script type="module" src="auth-guard.js"></script>
+
+    <!-- Botão Logout fixo -->
+    <div id="main-content" style="display:none" class="fixed top-2 right-2 z-[9998] no-print flex items-center gap-2">
+        <span id="user-nome" class="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded-lg hidden md:block"></span>
+        <button onclick="sessionStorage.removeItem('mega_session');window.location.href='login.html'"
+            class="px-3 py-1.5 bg-red-900/70 hover:bg-red-700 text-red-300 hover:text-white text-xs font-bold rounded-lg transition-all border border-red-800">
+            Sair
+        </button>
+        <a href="index.html" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-lg transition-all border border-gray-700">
+            ← Menu
+        </a>
+    </div>
+
     <div id="sidebar-menu" class="no-print">
     <div id="lock-overlay" class="absolute inset-0 bg-black/80 z-[10000] flex flex-col items-center justify-center p-6 text-center rounded-xl" style="display: flex;">
         <svg class="w-12 h-12 text-yellow-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,35 +432,27 @@
         </div>
     </div>
 </div>
-<div id="activation-screen" class="fixed inset-0 z-[9999] bg-[#0f172a] flex items-center justify-center p-4" style="display: none;">
-    <div class="max-w-md w-full bg-[#1e293b] rounded-2xl shadow-2xl border border-gray-700 p-8 text-center">
-        <h2 class="text-2xl font-bold text-white mb-4">Ativação Grupo Mega</h2>
-        <input type="text" id="license-key" placeholder="Digite o código único" class="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-xl text-white text-center mb-4">
-        <button onclick="checkLicense()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl">ATIVAR</button>
-        <p id="error-msg" class="text-red-500 text-sm mt-4 hidden">Código inválido!</p>
-    </div>
-</div>
+<!-- Activation screen removed — auth handled by login.html -->
+<div id="activation-screen" style="display:none!important"></div>
 
 
 
 <script>
-// --- 1. FUNÇÃO DE ATIVAÇÃO DA TELA AZUL (GERAL) ---
-function checkLicense() {
-    const input = document.getElementById('license-key').value.trim().toUpperCase();
-    const partes = input.split('-'); 
-    const erroMsg = document.getElementById('error-msg');
-
-    if (partes.length === 3 && partes[0] === "MEGA") {
-        const num = parseInt(partes[1]);
-        const check = parseInt(partes[2]);
-        if (check === (num * 3)) { 
-            localStorage.setItem("megacartaz_token", "ativo_2026");
-            location.reload();
-            return;
-        }
-    }
-    erroMsg.classList.remove('hidden'); // Mostra erro se a chave for inválida
+// Auth remoto gerenciado por auth-guard.js + login.html
+// Liberação dos painéis ao carregar
+function liberarPaineis() {
+    ['lock-overlay','lock-overlay-right'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    ['sidebar-content','sidebar-content-right'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
+    });
 }
+window.addEventListener('DOMContentLoaded', liberarPaineis);
+setTimeout(liberarPaineis, 600);
+
 
 window.filterButtons = function(side) {
     const input = document.getElementById('search-' + side);
@@ -471,84 +484,8 @@ window.filterButtons = function(side) {
     });
 };
 
-// --- 2. FUNÇÃO DE ATIVAÇÃO DO PAINEL LATERAL ---
-function checkLicenseSide() {
-    const input = document.getElementById('license-key-side').value.trim().toUpperCase();
-    const partes = input.split('-'); 
-    const erroMsg = document.getElementById('error-msg-side');
+// filterButtons kept below
 
-    // IMPORTANTE: O prefixo aqui deve ser PAINEL para bater com o gerador
-    if (partes.length === 3 && (partes[0] === "PAINEL" || partes[0] === "PANEL")) {
-        const num = parseInt(partes[1]);
-        const check = parseInt(partes[2]);
-
-        if (check === (num * 3)) { 
-            const agora = new Date().getTime();
-            // Salva com o nome CORRETO que o verificador usa
-            localStorage.setItem("megacartaz_token_painel", "ativo");
-            localStorage.setItem("megacartaz_date_painel", agora.toString());
-            
-            alert("Painel liberado com sucesso!");
-            location.reload();
-            return;
-        }
-    }
-    erroMsg.classList.remove('hidden');
-}
-
-// --- 3. VERIFICAÇÃO DE SEGURANÇA AO ABRIR A PÁGINA (ÚNICA) ---
-// --- FUNÇÃO DE VERIFICAÇÃO DE LICENÇA (ATUALIZADA) ---
-function checkLicenseSide() {
-    const input = document.getElementById('license-key-side').value.trim().toUpperCase();
-    
-    // Altere o código "PAINEL-30" para o seu código de preferência
-    if (input.startsWith("PAINEL-")) {
-        localStorage.setItem("megacartaz_token_painel", "ativo");
-        localStorage.setItem("megacartaz_date_painel", new Date().getTime().toString());
-        location.reload(); // Recarrega para aplicar a liberação em ambos
-    } else {
-        const errorMsg = document.getElementById('error-msg-side');
-        if (errorMsg) errorMsg.classList.remove('hidden');
-    }
-}
-
-// --- LÓGICA DE INICIALIZAÇÃO (BLOQUEIA/LIBERA AMBOS) ---
-window.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem("megacartaz_token_painel");
-    
-    // Elementos da Esquerda
-    const overlayLeft = document.getElementById('lock-overlay');
-    const contentLeft = document.getElementById('sidebar-content');
-    
-    // Elementos da Direita
-    const overlayRight = document.getElementById('lock-overlay-right');
-    const contentRight = document.getElementById('sidebar-content-right');
-
-    if (token === "ativo") {
-        // LIBERADO: Esconde os cadeados e ativa a interação
-        if (overlayLeft) overlayLeft.style.display = 'none';
-        if (overlayRight) overlayRight.style.display = 'none';
-        
-        [contentLeft, contentRight].forEach(el => {
-            if (el) {
-                el.style.opacity = '1';
-                el.style.pointerEvents = 'auto';
-            }
-        });
-    } else {
-        // BLOQUEADO: Mostra cadeados e desativa cliques/transparência
-        if (overlayLeft) overlayLeft.style.display = 'flex';
-        if (overlayRight) overlayRight.style.display = 'flex';
-        
-        [contentLeft, contentRight].forEach(el => {
-            if (el) {
-                el.style.opacity = '0.3'; // Mais escuro para indicar bloqueio
-                el.style.pointerEvents = 'none';
-            }
-        });
-    }
-});
-</script>
 
 <style>
     /* Esta regra mágica esconde qualquer coisa com a classe 'no-print' na hora da impressão */
