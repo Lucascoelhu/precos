@@ -349,6 +349,27 @@
 </head>
 
 <body>
+    <!-- Auth Loading -->
+    <div id="auth-loading" class="fixed inset-0 bg-gray-900 z-[99999] flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-300 text-sm font-sans">Verificando acesso...</p>
+        </div>
+    </div>
+    <script type="module" src="auth-guard.js"></script>
+
+    <!-- Botão Logout fixo -->
+    <div id="main-content" style="display:none" class="fixed top-2 right-2 z-[9998] flex items-center gap-2">
+        <span id="user-nome" class="text-xs text-gray-400 bg-black/50 px-2 py-1 rounded-lg hidden md:block"></span>
+        <button onclick="sessionStorage.removeItem('mega_session');window.location.href='login.html'"
+            class="px-3 py-1.5 bg-red-900/70 hover:bg-red-700 text-red-300 hover:text-white text-xs font-bold rounded-lg transition-all border border-red-800">
+            Sair
+        </button>
+        <a href="index.html" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold rounded-lg transition-all border border-gray-700">
+            ← Menu
+        </a>
+    </div>
+
     <div id="sidebar-menu" class="no-print">
     <div id="lock-overlay" class="absolute inset-0 bg-black/80 z-[10000] flex flex-col items-center justify-center p-6 text-center rounded-xl" style="display: flex;">
         <svg class="w-12 h-12 text-yellow-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -972,32 +993,16 @@ onValue(ref(db, 'botoes_aux/'), (snapshot) => {
     renderSide(snapshot.val(), 'right');
 });
 
+// Painéis liberados pelo auth-guard.js
 function liberarSistema() {
-    const token = localStorage.getItem("megacartaz_token_painel");
-    console.log("Status do Token:", token);
-
-    if (token === "ativo") {
-        // 1. Remove os overlays (as telas pretas)
-        const overlays = ['lock-overlay', 'lock-overlay-right'];
-        overlays.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.style.display = 'none'; // Esconde a tela de bloqueio
-                console.log("Removendo bloqueio visual de:", id);
-            }
-        });
-
-        // 2. Ativa o conteúdo (opacidade e cliques)
-        const conteudos = ['sidebar-content', 'sidebar-content-right'];
-        conteudos.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.style.opacity = '1';
-                el.style.pointerEvents = 'auto';
-                console.log("Ativando botões de:", id);
-            }
-        });
-    }
+    ['lock-overlay','lock-overlay-right'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    ['sidebar-content','sidebar-content-right'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
+    });
 }
 
 // Executa em dois momentos para garantir que nada falhe
