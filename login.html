@@ -101,7 +101,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyA8XOjs8PKFx7DvI-Xthxwra2AOLMjIhVU",
@@ -224,9 +224,7 @@ window.doLogin = async function() {
             return;
         }
 
-        // Login bem sucedido — registrar último acesso
-        await set(ref(db, `usuarios/${emailKey}/ultimo_acesso`), agora);
-
+        // Login bem sucedido — ultimo_acesso será registrado pelo auth-guard
         setSession(email, token);
         window.location.href = 'index.html';
 
