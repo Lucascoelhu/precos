@@ -892,6 +892,15 @@ window.addEventListener('DOMContentLoaded', () => {
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // --- USUÁRIO LOGADO (dados separados por usuário) ---
+  function emailToKey(email) {
+    return email.toLowerCase().replace(/\./g, '_dot_').replace(/@/g, '_at_');
+  }
+  const _session = JSON.parse(sessionStorage.getItem('mega_session') || '{}');
+  const userKey = emailToKey(_session.email || 'anonimo');
+  const BOTOES_PATH = `botoes_usuarios/${userKey}/botoes`;
+  const BOTOES_AUX_PATH = `botoes_usuarios/${userKey}/botoes_aux`;
+
   // Injetar Texto
   window.setText = function(selector, text, index = 0) {
     const elements = document.querySelectorAll(selector);
@@ -912,14 +921,14 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
 
-  window.deleteButton = (cat, id) => confirm("Excluir?") && remove(ref(db, `botoes/${cat}/${id}`));
+  window.deleteButton = (cat, id) => confirm("Excluir?") && remove(ref(db, `${BOTOES_PATH}/${cat}/${id}`));
 
 // --- 1. FUNÇÕES DE SALVAMENTO (CADA UM NA SUA GAVETA) ---
 window.addNewButton = function() {
     const target = document.getElementById('add-target').value;
     const val = document.getElementById('add-val').value.toUpperCase();
     if (val) {
-        push(ref(db, 'botoes/' + target), { texto: val })
+        push(ref(db, BOTOES_PATH + '/' + target), { texto: val })
             .then(() => { document.getElementById('add-val').value = ""; });
     }
 };
@@ -928,7 +937,7 @@ window.addNewButtonRight = function() {
     const target = document.getElementById('add-target-right').value;
     const val = document.getElementById('add-val-right').value.toUpperCase();
     if (val) {
-        push(ref(db, 'botoes_aux/' + target), { texto: val })
+        push(ref(db, BOTOES_AUX_PATH + '/' + target), { texto: val })
             .then(() => { document.getElementById('add-val-right').value = ""; });
     }
 };
@@ -940,7 +949,7 @@ function renderSide(data, side) {
     
     // Define o sufixo: se for o lado direito, busca IDs com '-right'. 
     const suffix = (side === 'right') ? '-right' : '';
-    const dbPath = (side === 'right') ? 'botoes_aux' : 'botoes';
+    const dbPath = (side === 'right') ? BOTOES_AUX_PATH : BOTOES_PATH;
 
     categories.forEach(cat => {
         // Seleciona APENAS o container do lado específico
@@ -979,7 +988,7 @@ function renderSide(data, side) {
                 delBtn.onclick = (e) => {
                     e.stopPropagation();
                     if(confirm("Deseja excluir este item?")) {
-                        remove(ref(db, `${dbPath}/${cat}/${id}`));
+                        remove(ref(db, `${dbPath === BOTOES_AUX_PATH ? BOTOES_AUX_PATH : BOTOES_PATH}/${cat}/${id}`));
                     }
                 };
 
@@ -994,12 +1003,12 @@ function renderSide(data, side) {
 // --- ESCUTADORES INDEPENDENTES (AQUI ESTÁ A SOLUÇÃO) ---
 
 // Escuta a pasta 'botoes' e envia os dados APENAS para os containers da ESQUERDA
-onValue(ref(db, 'botoes/'), (snapshot) => {
+onValue(ref(db, BOTOES_PATH + '/'), (snapshot) => {
     renderSide(snapshot.val(), 'left');
 });
 
 // Escuta a pasta 'botoes_aux' e envia os dados APENAS para os containers da DIREITA
-onValue(ref(db, 'botoes_aux/'), (snapshot) => {
+onValue(ref(db, BOTOES_AUX_PATH + '/'), (snapshot) => {
     renderSide(snapshot.val(), 'right');
 });
 
